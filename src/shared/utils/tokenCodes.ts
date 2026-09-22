@@ -11,7 +11,7 @@ export const getTokenCodes = (): TokenCodeModel[] => {
   return tokenCodes;
 };
 
-function extractTokens(
+export function extractTokens(
   data: GlobalState["data"]
 ): TokenCodeModel[] | undefined {
   return data?.vault.streams.map(
