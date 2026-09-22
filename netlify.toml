@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # @filedgr/web-core declares optional peers (e.g. xlsx) that are not on the
+  # npm registry; install the same way CI does.
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
