@@ -1,6 +1,6 @@
 import { NETWORK_SERVER_NAMES } from "@/shared/utils/networks";
-import { Types } from "@filedgr/filedgr-template-sdk";
-import { IProvider } from "@web3auth/base";
+import type { AttachmentModel } from "@filedgr/web-core/upload";
+import type { IProvider } from "@web3auth/modal";
 export interface JSONNft {
   vault: Vault;
   data: Data;
@@ -99,7 +99,7 @@ export interface GlobalState {
   };
   isAuthModalOpen: boolean;
   isPurchaseModalOpen: boolean;
-  attachmentInfo: Types.GetDataAttachmentResponse | null;
+  attachmentInfo: AttachmentModel | null;
 }
 
 export interface UserWeb3Model {

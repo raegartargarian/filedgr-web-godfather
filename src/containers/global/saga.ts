@@ -3,7 +3,7 @@ import JSONFile from "@/json/ledger.json";
 import {
   getAttachmentDetail,
   getTokensAttachment,
-} from "@/shared/providers/templateSdk";
+} from "@/shared/providers/templateApi";
 import { getIPFSIMGAddrPrivate } from "@/shared/utils/getIPFSAddrs";
 import { LocalStorageKeys } from "@/shared/utils/localStorageHelpers";
 import { getTokenCodes } from "@/shared/utils/tokenCodes";
@@ -183,8 +183,8 @@ function* fetchMovieData(): any {
         // Fetch attachments for this token
         const response = yield call(getTokensAttachment, {
           tokenCode: token.value,
-          page: "1",
-          pageSize: "100",
+          page: 1,
+          pageSize: 100,
         });
 
         if (response.content && response.content.length > 0) {

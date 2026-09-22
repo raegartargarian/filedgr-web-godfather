@@ -1,7 +1,12 @@
 // src/shared/utils/zipHandler.ts
-import JSZip from "jszip";
+//
+// Zip extraction comes from @filedgr/web-core/zip (Web Worker with a
+// main-thread fallback). Only the template-specific shaping stays here:
+// sorting the entries into images / video / documents and picking up the
+// embedded movie (or legacy property) JSON.
+import { extractZipFiles } from "@filedgr/web-core/zip";
 
-interface ProcessedContent {
+export interface ProcessedContent {
   type: string;
   content: {
     images?: { name: string; blob: Blob }[];
@@ -12,11 +17,14 @@ interface ProcessedContent {
   };
 }
 
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
+const VIDEO_EXTENSIONS = ["mp4", "mov", "avi", "webm", "mkv", "flv"];
+const DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx", "txt"];
+
 export const processZipFile = async (
   buffer: ArrayBuffer
 ): Promise<ProcessedContent> => {
-  const zip = new JSZip();
-  const zipContent = await zip.loadAsync(buffer);
+  const entries = await extractZipFiles(new Blob([buffer]));
 
   const result: ProcessedContent = {
     type: "unknown",
@@ -32,37 +40,23 @@ export const processZipFile = async (
   let movieInfo: any;
   let propertyInfo: any;
 
-  // Process each file in the ZIP
-  for (const filename in zipContent.files) {
-    const file = zipContent.files[filename];
-
-    if (file.dir) continue; // Skip directories
-
+  for (const [filename, blob] of entries) {
     try {
       // Check file type by extension
-      const extension = filename.toLowerCase().split(".").pop();
+      const extension = filename.toLowerCase().split(".").pop() || "";
 
-      if (
-        ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension || "")
-      ) {
-        // Image file
-        const blob = await file.async("blob");
+      if (IMAGE_EXTENSIONS.includes(extension)) {
         images.push({ name: filename, blob });
-      } else if (
-        ["mp4", "mov", "avi", "webm", "mkv", "flv"].includes(extension || "")
-      ) {
+      } else if (VIDEO_EXTENSIONS.includes(extension)) {
         // Video file - take the first one found
         if (!video) {
-          const blob = await file.async("blob");
           video = { name: filename, blob };
         }
-      } else if (["pdf", "doc", "docx", "txt"].includes(extension || "")) {
-        // Document file
-        const blob = await file.async("blob");
+      } else if (DOCUMENT_EXTENSIONS.includes(extension)) {
         documents.push({ name: filename, blob });
       } else if (extension === "json") {
         // JSON file - try to parse for movie/property info
-        const text = await file.async("text");
+        const text = await blob.text();
         try {
           const jsonData = JSON.parse(text);
 
@@ -107,7 +101,7 @@ export const processZipFile = async (
 
   // If we have images but no specific type, assume it's documentation
   if (result.type === "unknown" && images.length > 0) {
-    result.type = video ? "movie-content" : "property-documentation";
+    result.type = "property-documentation";
   }
 
   return result;

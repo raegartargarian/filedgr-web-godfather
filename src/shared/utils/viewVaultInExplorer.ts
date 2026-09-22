@@ -1,5 +1,6 @@
 import { GlobalState } from "@/containers/global/types";
 import JSONFile from "@/json/ledger.json";
+import { chainTxUrl } from "@filedgr/web-core/explorer";
 import { getNetworkExplorerUrlByServerName } from "./networks";
 
 export const openViewVaultExplorer = () => {
@@ -19,5 +20,5 @@ export const viewTXInExplorer = (tx: string) => {
   }
   const ledger = data.vault.ledger;
   const explorer = getNetworkExplorerUrlByServerName(ledger);
-  window.open(`${explorer}/tx/${tx}`, "_blank");
+  window.open(chainTxUrl(explorer, tx), "_blank");
 };

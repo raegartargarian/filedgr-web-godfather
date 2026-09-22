@@ -1,13 +1,12 @@
-export interface INetworkModel {
-  id: string;
-  name: string;
-  symbol: string;
-  logoUrl: string;
-  isTestnet?: boolean;
-  chainId?: number;
-  serverName: NETWORK_SERVER_NAMES;
-  explorerUrl: string;
-}
+// Network descriptor types come from @filedgr/web-core/web3; the concrete,
+// template-specific list (logos, explorer URLs) stays here.
+import type {
+  INetworkModel,
+  NETWORK_SERVER_NAMES,
+} from "@filedgr/web-core/web3";
+
+export type { INetworkModel, NETWORK_SERVER_NAMES };
+
 // Network Configuration
 export const SUPPORTED_NETWORKS: INetworkModel[] = [
   {
@@ -81,7 +80,6 @@ export const getLedgerNameFromServerName = (
       ?.name || ""
   );
 };
-export type NETWORK_SERVER_NAMES = "POLYGON_ZKEVM" | "XRPL" | "ETHEREUM";
 export const getNetworkLogoByServerName = (
   serverName: NETWORK_SERVER_NAMES | undefined
 ): string => {

@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWeb3Auth } from "@/containers/global/Web3AuthProvider";
+import { truncateAddress } from "@filedgr/web-core/format";
 import {
   Crown,
   Facebook,
@@ -21,13 +22,9 @@ import { useWalletAddress } from "../hooks/useWalletAddr";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isLoading, isAuthenticated, user, login, logout, error } =
+  const { isLoading, isAuthenticated, user, login, logout } =
     useWeb3Auth() || {};
   const walletAddress = useWalletAddress();
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const navigationItems = [{ name: "HOME", href: "#home", active: true }];
 
@@ -113,7 +110,7 @@ const Header = () => {
                   <Button className="wallet-trigger">
                     <User className="w-4 h-4" />
                     <span className="wallet-address">
-                      {formatAddress(walletAddress || "Unknown")}
+                      {truncateAddress(walletAddress || "Unknown")}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -139,12 +136,6 @@ const Header = () => {
                 <Shield className="w-4 h-4 mr-2" />
                 Connect Wallet
               </Button>
-            )}
-
-            {error && (
-              <div className="auth-error">
-                <span className="error-text">{error}</span>
-              </div>
             )}
           </div>
 
@@ -178,7 +169,7 @@ const Header = () => {
                 <div className="mobile-wallet-info">
                   <div className="mobile-user-info">
                     <User className="w-5 h-5 text-godfather-gold" />
-                    <span>{formatAddress(walletAddress || "Connected")}</span>
+                    <span>{truncateAddress(walletAddress || "Connected")}</span>
                   </div>
                   <Button
                     onClick={handleLogout}
