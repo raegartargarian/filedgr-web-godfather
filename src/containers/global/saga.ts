@@ -13,6 +13,35 @@ import { GlobalSelectors } from "./selectors";
 import { globalActions } from "./slice";
 import { GlobalState, MovieInfo } from "./types";
 
+// Bundled fallback media, used when the vault's content can't be fetched.
+import fixtureImage from "@/shared/fixtures/GodFather.png";
+import fixtureVideo from "@/shared/fixtures/GodFather.mp4";
+
+type MediaFile = { name: string; blob: Blob };
+
+async function fetchAsBlob(url: string): Promise<Blob> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${url}: ${response.status}`);
+  }
+  return response.blob();
+}
+
+/** Fill whatever the API/IPFS fetch left empty with the local fixtures. */
+async function withFixtureFallback<
+  T extends { video: MediaFile | null; images: MediaFile[] },
+>(data: T): Promise<T> {
+  const [video, image] = await Promise.all([
+    data.video ? null : fetchAsBlob(fixtureVideo),
+    data.images.length > 0 ? null : fetchAsBlob(fixtureImage),
+  ]);
+  return {
+    ...data,
+    video: video ? { name: "GodFather.mp4", blob: video } : data.video,
+    images: image ? [{ name: "GodFather.png", blob: image }] : data.images,
+  };
+}
+
 function* fetchData(): any {
   try {
     // Read the json file
@@ -33,7 +62,6 @@ function* fetchMovieData(): any {
 
     if (!tokenCodes || tokenCodes.length === 0) {
       console.error("No token codes available to fetch movie data");
-      return;
     }
 
     // Create movie info object for GAMBINO
@@ -165,11 +193,11 @@ function* fetchMovieData(): any {
     };
 
     // Initialize movie data object
-    const movieData: {
+    let movieData: {
       movieInfo: MovieInfo;
-      video: { name: string; blob: Blob } | null;
-      images: { name: string; blob: Blob }[];
-      documents: { name: string; blob: Blob }[];
+      video: MediaFile | null;
+      images: MediaFile[];
+      documents: MediaFile[];
     } = {
       movieInfo,
       video: null,
@@ -178,7 +206,7 @@ function* fetchMovieData(): any {
     };
 
     // Process all tokens to get their attachments
-    for (const token of tokenCodes) {
+    for (const token of tokenCodes ?? []) {
       try {
         // Fetch attachments for this token
         const response = yield call(getTokensAttachment, {
@@ -323,6 +351,15 @@ function* fetchMovieData(): any {
         }
       } catch (error) {
         console.error(`Error processing token ${token.name}:`, error);
+      }
+    }
+
+    if (!movieData.video || movieData.images.length === 0) {
+      console.warn("Vault media unavailable, falling back to local fixtures");
+      try {
+        movieData = yield call(withFixtureFallback, movieData);
+      } catch (error) {
+        console.error("Error loading fixture media:", error);
       }
     }
 
